@@ -23,11 +23,26 @@ void* producer(void* arg) {
     return NULL;
 }
 
+
+/*
+总是同时使用条件变量(pthread_cond_t) 和 条件本身(data_ready) 来判断是否有数据可供消费。
+主要是为了避免以下的三种情况：
+
+    虚假唤醒    ： 条件变量可能会在没有被显式唤醒的情况下被唤醒，这种情况称为虚假唤醒。
+                  如果只使用条件变量而不检查data_ready，可能会导致消费者在没有数据可消费的情况下继续处理。 
+
+    忙等待      ： 如果不使用条件变量只使用while()和标志位判断，会导致cpu资源浪费
+
+    多消费者    ： 只用条件变量不使用data_ready的情况下，会导致第一个消费完了，第二个接着消费已经消费过的数据
+                  生产者生产后解锁，被第一个消费者抢到锁消费，消费完解锁，紧接着第二个消费者又抢到锁，接着消费已经被第一个消费者消费过的数据
+*/
+
 void* consumer(void* arg) {
     while (1) {
         pthread_mutex_lock(&mutex);
+
         while (!data_ready) {
-            pthread_cond_wait(&cond, &mutex); // 等待生产者通知
+            pthread_cond_wait(&cond, &mutex); // 等待生产者通知，wait会先自动释放锁，然后阻塞等待被唤醒，唤醒后自动又加锁
         }
         printf("Consumer: consumed data = %d\n", shared_data);
         data_ready = 0;

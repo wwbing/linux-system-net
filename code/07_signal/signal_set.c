@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
 	sigaddset(&set,SIGSTOP);
 	
 
-	//根绝自定义信号集 设置阻塞信号集信号阻塞状态
+	//根据自定义信号集 设置阻塞信号集信号阻塞状态
 	int ret = sigprocmask(SIG_BLOCK, &set, &old_set);
 
 	if(ret == -1){

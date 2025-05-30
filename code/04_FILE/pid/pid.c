@@ -21,6 +21,12 @@ int main(){
 	if(i==5){
 		sleep(6);
 		printf("我是父进程\n");
+		// 回收所有子进程
+		int status;
+		pid_t wpid;
+		while((wpid = wait(&status)) > 0) {
+			printf("子进程%d已回收\n", wpid);
+		}
 	}else{	
 		sleep(i+1);
 		printf("我是第%d个子进程\n",i);
